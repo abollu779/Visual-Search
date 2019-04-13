@@ -12,8 +12,14 @@
 ######################################################
 
 
-class Network(nn.Module):
+if __name__ == '__main__':
+    import torch
+    from torch import nn
+
+
+class ImageTextAttention(nn.Module):
     def __init__(self,MODIFY_PAPER=False):
+        super(ImageTextAttention, self).__init__()
 
         ###################
         # SIZE DFINITIONS #
@@ -22,7 +28,7 @@ class Network(nn.Module):
         # Image features
         self.image_channels = 1024
         self.image_height = 32 if MODIFY_PAPER else 13
-        self.image_width = 32 if MODIFY PAPER else 13
+        self.image_width = 32 if MODIFY_PAPER else 13
         self.num_image_feat_vecs = self.image_height * self.image_width
 
         # Text features
@@ -72,6 +78,8 @@ class Network(nn.Module):
         assert(proj_image_features.shape == (batch_size,self.num_image_feat_vecs,self.hidden_dim_size))
         proj_text_features = self.text_proj_matrix(text_features)
         assert(proj_text_features.shape == (batch_size,self.hidden_dim_size))
+        proj_text_features = proj_text_features.unsqueeze(dim=1)
+        assert(proj_text_features.shape == (batch_size,1,self.hidden_dim_size))
 
         # Sum and apply activation
         combined_features = proj_image_features + proj_text_features
@@ -82,19 +90,27 @@ class Network(nn.Module):
         # Compute alignment coefficient for each local image feature
         # alignment matrix is really a collection of learnable alignment vectors, applied row-wise
         alignments = torch.stack([self.alignment_matrices[i](combined_features[:,i,:]) for i in range(self.num_image_feat_vecs)],dim=1)
+        assert(alignments.shape == (batch_size,self.num_image_feat_vecs,1))
+        alignments = alignments.squeeze()
         assert(alignments.shape == (batch_size,self.num_image_feat_vecs))
 
         # Weight each local image feature vector by its softmaxed alignment
         coeffs = self.softmax(alignments)
         assert(coeffs.shape == (batch_size,self.num_image_feat_vecs))
+        coeffs = coeffs.unsqueeze(dim=2)
+        assert(coeffs.shape == (batch_size,self.num_image_feat_vecs,1))
         weighted_feat_vecs = coeffs * image_features
+        assert(weighted_feat_vecs.shape == (batch_size,self.num_image_feat_vecs,self.image_channels))
+        weighted_feat_vecs = weighted_feat_vecs.view(batch_size,self.image_height,self.image_width,self.image_channels)
+        assert(weighted_feat_vecs.shape == (batch_size,self.image_height,self.image_width,self.image_channels))
 
         # Finally, combine the weighted feature vectors with some amount of summing
         aggregate_visual_feats = torch.zeros(batch_size,self.aggregate_feat_length,self.aggregate_image_height,self.aggregate_image_width)
-        stride =
+        stride = self.image_width // self.aggregate_image_width
         for h in range(self.aggregate_image_height):
             for w in range(self.aggregate_image_width):
-                aggregate_visual_feats[:,:,h,w] =
+                aggregate_visual_feats[:,:,h,w] = torch.sum(weighted_feat_vecs[:,h*stride:(h+1)*stride,w*stride:(w+1)*stride,:],dim=(1,2))
+        assert(aggregate_visual_feats.shape == (batch_size,self.aggregate_feat_length,self.aggregate_image_height,self.aggregate_image_width))
 
         # Cleanup for GPU's sake
         del image_features, text_features
@@ -103,3 +119,41 @@ class Network(nn.Module):
         del alignments, coeffs, weighted_feat_vecs
 
         return aggregate_visual_feats
+
+
+if __name__ == '__main__':
+
+    def test_attention():
+
+        dut = ImageTextAttention(MODIFY_PAPER=False)
+        loss_fn = nn.PairwiseDistance()
+        optimizer = torch.optim.Adam(dut.parameters())
+
+        image = torch.rand(2,1024,13,13)
+        text = torch.rand(2,2048)
+        truth = torch.rand(2,1024,1,1)
+
+        out = dut.forward(image,text)
+        loss = loss_fn(out,truth).mean()
+        loss.backward()
+        optimizer.step()
+
+        print("Test did not crash with MODIFY_PAPER=False")
+
+        dut = ImageTextAttention(MODIFY_PAPER=True)
+        loss_fn = nn.PairwiseDistance()
+        optimizer = torch.optim.Adam(dut.parameters())
+
+        image = torch.rand(2,1024,32,32)
+        text = torch.rand(2,2048)
+        truth = torch.rand(2,1024,4,4)
+
+        out = dut.forward(image,text)
+        loss = loss_fn(out,truth).mean()
+        loss.backward()
+        optimizer.step()
+
+        print("Test did not crash with MODIFY_PAPER=True")
+
+    test_attention()
+    print("SUCCESS")
