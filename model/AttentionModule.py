@@ -136,7 +136,7 @@ class ImageTextAttention(nn.Module):
                 for w in range(self.image_width):
 
                     # Parse bounding box
-                    x1,y1,width,height = bounding_boxes[i]
+                    x1,y1,width,height = bounding_boxes[i].tolist()
                     x2,y2 = x1+width,y1+height
 
                     # Convert box coords from [0,1] to image resolution
@@ -168,7 +168,7 @@ if __name__ == '__main__':
 
         image = torch.rand(2,1024,13,13)
         text = torch.rand(2,2048)
-        true_bounding_boxes = torch.rand(2,4)
+        true_bounding_boxes = torch.Tensor([[.5,.5,.5,.5],[.2,.2,.2,.2]])
 
         out = dut.forward(image,text)
         assert(out.shape == (2,1024,1,1))
@@ -184,7 +184,7 @@ if __name__ == '__main__':
 
         image = torch.rand(2,1024,32,32)
         text = torch.rand(2,2048)
-        true_bounding_boxes = torch.rand(2,4)
+        true_bounding_boxes = torch.Tensor([[.5,.5,.5,.5],[.2,.2,.2,.2]])
 
         out = dut.forward(image,text)
         assert(out.shape == (2,1024,4,4))
