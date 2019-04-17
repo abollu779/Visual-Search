@@ -1,15 +1,15 @@
-#############################################################
-#															#
+#################################################################
+#								#
 # Input   : (Currently) Reads image path from command line	#
-#			(Ideally:)										#
-#			Image of shape (batch_size) 3 * 416 * 416		#
-#															#
+#	    (Ideally:)				                #
+#	    Image of shape (batch_size) 3 * 416 * 416		#
+#							        #
 # Returns : Output of 58th convolutional layer of yolov3.	#
-#			i.e. layer 'conv_80'							#
-#			(Currently) shape- 1 * 13 * 13 * 1024			#
-#			(Ideally) shape- (batch_size) 13 * 13 * 1024	#
-#															#
-#############################################################
+#	    i.e. layer 'conv_80'				#
+#	    (Currently) shape- 1 * 13 * 13 * 1024		#
+#	    (Ideally) shape- (batch_size) 13 * 13 * 1024	#
+#								#
+#################################################################
 
 import cv2 as cv
 import argparse
