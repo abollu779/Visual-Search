@@ -27,7 +27,7 @@ showMask   - show mask of the referred object given ref
 import sys
 import os.path as osp
 import json
-import _pickle as pickle
+import pickle as pickle
 import time
 import itertools
 import skimage.io as io
@@ -42,7 +42,7 @@ from external import mask
 
 class REFER:
 
-	def __init__(self, data_root, dataset='refcoco', splitBy='unc'):
+	def __init__(self, data_root='data', dataset='refcoco', splitBy='unc'):
 		# provide data_root folder which contains refclef, refcoco, refcoco+ and refcocog
 		# also provide dataset name and splitBy information
 		# e.g., dataset = 'refcoco', splitBy = 'unc'
@@ -50,7 +50,7 @@ class REFER:
 		self.ROOT_DIR = osp.abspath(osp.dirname(__file__))
 		self.DATA_DIR = osp.join(data_root, dataset)
 		if dataset in ['refcoco', 'refcoco+', 'refcocog']:
-			self.IMAGE_DIR = osp.join(data_root, 'images/mscoco/images/train2014')
+			self.IMAGE_DIR = osp.join(data_root, 'images/train2014')
 		elif dataset == 'refclef':
 			self.IMAGE_DIR = osp.join(data_root, 'images/saiapr_tc-12')
 		else:
@@ -62,7 +62,7 @@ class REFER:
 		ref_file = osp.join(self.DATA_DIR, 'refs('+splitBy+').p')
 		self.data = {}
 		self.data['dataset'] = dataset
-		self.data['refs'] = pickle.load(open(ref_file, 'r'))
+		self.data['refs'] = pickle.load(open(ref_file, 'rb'))
 
 		# load annotations from data/dataset/instances.json
 		instances_file = osp.join(self.DATA_DIR, 'instances.json')
@@ -331,7 +331,7 @@ class REFER:
 
 
 if __name__ == '__main__':
-	refer = REFER(dataset='refcocog', splitBy='google')
+	refer = REFER(dataset='refcoco+', splitBy='unc')
 	ref_ids = refer.getRefIds()
 	print(len(ref_ids))
 
