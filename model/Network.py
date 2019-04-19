@@ -75,7 +75,7 @@ class Network(nn.Module):
 
         # BBP:
         #   Input: combined embedding + textual embedding (concat within BBP forward for now)
-        #   - C: batch_size x 1024
-        #   - T: batch_size x 2048
+        #   - C: batch_size x 1 x 1 x 1024
+        #   - T: batch_size x 1 x 1 x 2048
         #   Outputs bbox prediction
         #   - batch_size x 5 (x, y, w, h, conf)
