@@ -19,6 +19,7 @@ import argparse
 import sys
 import numpy as np
 import os.path
+from DataLoader import *
 
 Width  = 416       #Width of network's input image
 Height = 416      #Height of network's input image
@@ -35,23 +36,40 @@ net = cv.dnn.readNetFromDarknet(modelConfiguration, modelWeights)
 net.setPreferableBackend(cv.dnn.DNN_BACKEND_OPENCV)
 net.setPreferableTarget(cv.dnn.DNN_TARGET_CPU)
 
-if not os.path.isfile(args.image):
-    print("Input image file ", args.image, " doesn't exist")
-    sys.exit(1)
-imgs =[]
-img = cv.imread(args.image)
-imgs.append(img)
-imgs = np.asarray(imgs)
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-# If: Input shape == 3*416*416: No need to create blob
-# Else: Create a 4D blob from a frame.
-blob = cv.dnn.blobFromImages(imgs, 1/255, (Width, Height), [0,0,0], 1, crop=False)
-print (blob.shape)
+dataset = RefDataset("train")
+loader = DataLoader(dataset, batch_size=128, shuffle=True, num_workers=(8 if device == "cuda" else 0))
 
-# Sets the input to the network
-net.setInput(blob)
 
-# Runs the forward pass to get output of the output layers
-layersNames = net.getLayerNames()
-out = net.forward('conv_80')
-print (out.shape)
+img_yolo_embedding = {}
+for idx, (file_names,file_ids) in enumerate(loader):
+	# print(idx,len(file_names))
+	img_yolo_embedding = img_yolo_embedding.fromkeys(file_ids)
+	imgs =[]
+
+	for f in file_names:
+		f = os.path.join('data/images/train2014',f)
+		if not os.path.isfile(f):
+			print("Input image file ", f, " doesn't exist")
+			sys.exit(1)
+
+		img = cv.imread(f)
+		imgs.append(img)
+	imgs = np.asarray(imgs)
+
+	# Create a 4D blob from a frame.
+	blob = cv.dnn.blobFromImages(imgs, 1/255, (Width, Height), [0,0,0], 1, crop=False)
+	print (blob.shape)
+	
+	# Sets the input to the network
+	net.setInput(blob)
+	
+	# Runs the forward pass to get output of the output layers
+	# layersNames = net.getLayerNames()
+	if idx == 0:
+		out = net.forward('conv_80')
+		print (out.shape)
+	else:
+		out = np.concatenate((out, net.forward('conv_80')), axis=0)
+		print (out.shape)
