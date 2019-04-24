@@ -15,10 +15,19 @@ class RefDataset(Dataset):
         return len(self.ref_ids)
 
     def __getitem__(self,i):
+
         ref_id = self.ref_ids[i]
         ref = self.refer.loadRefs(ref_id)[0]
+        image = self.refer.Imgs[ref['image_id']]
 
+        height = image['height']
+        width = image['width']
         bound_box = self.refer.getRefBox(ref_id)
+        bound_box[0] /= width
+        bound_box[1] /= height
+        bound_box[2] /= width
+        bound_box[3] /= height
+
         whole_file_name = ref['file_name']
         file_name = whole_file_name[:whole_file_name.rfind("_")]+".jpg"
         ref_expr = random.choice(ref['sentences'])['raw']
@@ -34,4 +43,4 @@ if __name__ == '__main__':
     loader = DataLoader(dataset, batch_size=128, shuffle=True, num_workers=(8 if device == "cuda" else 0))
 
     for idx, (f,r,b) in enumerate(loader):
-        print(idx,f,r,b)
+        print(f,r,b)
