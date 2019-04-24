@@ -16,7 +16,7 @@ def run():
 
     # Network
     model = Network()
-    optimizer = torch.optim.Adam(net.parameters(), lr=config.learning_rate, weight_decay=config.weight_decay)
+    optimizer = torch.optim.Adam(model.parameters(), lr=config.learning_rate, weight_decay=config.weight_decay)
 
     # Initialize criterion instance
     criterion = None
