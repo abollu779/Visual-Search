@@ -123,8 +123,8 @@ class BBP(nn.Module):
 
     def loss(self, bounding_boxes):
         preds = torch.squeeze(self.predictions)
-        # bounding_boxes: N x 4
-        # preds: N x 5
+        # bounding_boxes: batch_size x 4
+        # preds: batch_size x 5
 
         lloss = self.localization_loss(preds[:,:-1], bounding_boxes)
         closs = self.conf_loss(preds, bounding_boxes)

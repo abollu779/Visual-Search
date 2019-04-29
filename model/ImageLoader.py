@@ -1,4 +1,4 @@
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, DataLoader
 from refer import REFER
 from pprint import pprint
 import random
@@ -12,7 +12,7 @@ class ImageLoader(Dataset):
         print('Found {} images.'.format(len(self.image_ids)))
 
     def __len__(self):
-        return len(self.ref_ids)
+        return len(self.image_ids)
 
     def __getitem__(self,i):
         image_id = self.image_ids[i]
@@ -20,6 +20,6 @@ class ImageLoader(Dataset):
         return image['file_name'], image['id']
 
 if __name__ == '__main__':
-    loader = ImageLoader()
-    for image in loader:
+    dataset = ImageLoader()
+    for image in dataset:
         print(image)

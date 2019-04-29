@@ -18,12 +18,12 @@ def train_epoch(train_loader, model, optimizer, criterion):
     epoch_loss = 0
     num_batches = len(train_loader)
     
-    for batch_id, (images, descriptions, bboxes) in enumerate(train_loader):
+    for batch_id, (img_feats, txt_feats, bboxes) in enumerate(train_loader):
         optimizer.zero_grad()
         images = images.to(config.device)
         descriptions = descriptions.to(config.device)
         
-        pred_bboxes = model(images, descriptions)
+        pred_bboxes = model(img_feats, txt_feats)
 
         # Compute loss
         loss = None
@@ -41,11 +41,11 @@ def evaluate(dev_loader, model, criterion):
     val_loss = 0
     num_batches = len(dev_loader)
 
-    for batch_id, (images, descriptions, bboxes) in enumerate(dev_loader):
+    for batch_id, (img_feats, txt_feats, bboxes) in enumerate(dev_loader):
         images = images.to(config.device)
         descriptions = descriptions.to(config.device)
         
-        pred_bboxes = model(images, descriptions)
+        pred_bboxes = model(img_feats, txt_feats)
 
         # Compute loss
         loss = None
