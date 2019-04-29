@@ -34,6 +34,11 @@ class Network(nn.Module):
         self.attn = ImageTextAttention()
         self.bbp = BBP()
 
+        # TODO: Initialize following loss weight factors appropriately
+        self.lweight = None
+        self.cweight = None
+        self.aweight = None
+
     def forward(self, img_feats, txt_feats):
 
         # img_feats: batch_size x 1024 x 13 x 13
@@ -46,3 +51,12 @@ class Network(nn.Module):
         preds = self.bbp(agg_feats, txt_feats) # batch_size x 5
 
         return preds
+
+    def loss(self, bounding_boxes):
+        # bounding_boxes: batch_size x 4
+        lloss, closs = self.bbp.loss(bounding_boxes)
+        aloss = self.attn.loss(bounding_boxes)
+
+        loss = (self.lweight * lloss) + (self.cweight * closs) + (self.aweight * aloss)
+        return loss
+
