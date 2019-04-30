@@ -3,12 +3,17 @@ from refer import REFER
 from pprint import pprint
 import random
 import torch
-
+import os
+import numpy as np
 
 class RefDataset(Dataset):
     def __init__(self,split):
         self.refer = REFER(dataset='refcoco+', splitBy='unc')
         self.ref_ids = self.refer.getRefIds(split=split)
+        self.image_embeds = np.load(os.path.join("data","embeddings","ImageEmbeddings.npy"))
+        self.image_ids = list(np.load(os.path.join("data","embeddings","ImageIDs.npy")))
+        self.text_embeds = np.load(os.path.join("data","embeddings","TextEmbeddings.npy"))
+        self.text_ids = list(np.load(os.path.join("data","embeddings","TextIDs.npy")))
         print('Found {} referred objects in {} split.'.format(len(self.ref_ids),split))
 
     def __len__(self):
@@ -18,7 +23,11 @@ class RefDataset(Dataset):
 
         ref_id = self.ref_ids[i]
         ref = self.refer.loadRefs(ref_id)[0]
-        image = self.refer.Imgs[ref['image_id']]
+
+        image_id = ref['image_id']
+        image = self.refer.Imgs[image_id]
+        image_idx = self.image_ids.index(image_id)
+        image_embed = self.image_embeds[image_idx,:,:,:]
 
         height = image['height']
         width = image['width']
@@ -28,11 +37,17 @@ class RefDataset(Dataset):
         bound_box[2] /= width
         bound_box[3] /= height
 
-        whole_file_name = ref['file_name']
-        file_name = whole_file_name[:whole_file_name.rfind("_")]+".jpg"
-        ref_expr = random.choice(ref['sentences'])['raw']
+        #whole_file_name = ref['file_name']
+        #file_name = whole_file_name[:whole_file_name.rfind("_")]+".jpg"
 
-        return file_name, ref_expr, bound_box
+        sent = random.choice(ref['sentences'])
+        ref_expr = sent['raw']
+        text_id = sent['sent_id']
+
+        text_idx = self.text_ids.index(text_id)
+        text_embed = self.text_embeds[text_idx,:,:,:]
+
+        return image_embed, text_embed, bound_box
         
 
 if __name__ == '__main__':
