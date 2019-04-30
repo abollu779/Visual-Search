@@ -18,14 +18,9 @@ def run():
     model = Network()
     optimizer = torch.optim.Adam(model.parameters(), lr=config.learning_rate, weight_decay=config.weight_decay)
 
-    # Initialize criterion instance
-    criterion = None
-    # EXAMPLE: criterion = Loss(), where Loss is a class we define separately
-    # which combines the four individual losses (confidence, localization, etc.)
-
     if config.train:
         print("=========Training Model=========")
-        routine.routine(train_loader, dev_loader, model, optimizer, criterion)
+        routine.routine(train_loader, dev_loader, model, optimizer)
 
     print("==========Inference===========")
     # Predict on Test Set
