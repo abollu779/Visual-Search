@@ -12,13 +12,12 @@
 ######################################################
 
 
-if __name__ == '__main__':
-    import torch
-    from torch import nn
 
+import torch
+import torch.nn as nn
 
 class ImageTextAttention(nn.Module):
-    def __init__(self,MODIFY_PAPER=False):
+    def __init__(self, MODIFY_PAPER=False):
         super(ImageTextAttention, self).__init__()
 
         ###################
@@ -55,7 +54,7 @@ class ImageTextAttention(nn.Module):
         # Three matrices to be learned
         self.image_proj_matrix = nn.Linear(self.image_channels,H,bias=False)
         self.text_proj_matrix = nn.Linear(self.text_feature_size,H,bias=False)
-        self.alignment_matrices = [nn.Linear(H,1,bias=False) for _ in range(N)]
+        self.alignment_matrices = nn.ModuleList([nn.Linear(H,1,bias=False) for _ in range(N)])
 
         # Activation functions
         self.alignment_activation = nn.Tanh()
@@ -110,7 +109,8 @@ class ImageTextAttention(nn.Module):
         assert(weighted_feat_vecs.shape == (batch_size,self.image_height,self.image_width,self.image_channels))
 
         # Finally, combine the weighted feature vectors with some amount of summing
-        aggregate_visual_feats = torch.zeros(batch_size,self.aggregate_feat_length,self.aggregate_image_height,self.aggregate_image_width)
+        device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        aggregate_visual_feats = torch.zeros(batch_size,self.aggregate_feat_length,self.aggregate_image_height,self.aggregate_image_width).to(device)
         stride = self.image_width // self.aggregate_image_width
         for h in range(self.aggregate_image_height):
             for w in range(self.aggregate_image_width):
@@ -128,8 +128,9 @@ class ImageTextAttention(nn.Module):
 
     def loss(self,bounding_boxes):
 
+        device = 'cuda' if torch.cuda.is_available() else 'cpu'
         batch_size = bounding_boxes.shape[0]
-        truth = torch.zeros(batch_size,self.image_height,self.image_width)
+        truth = torch.zeros(batch_size,self.image_height,self.image_width).to(device)
 
         for i in range(batch_size):
             for h in range(self.image_height):

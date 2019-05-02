@@ -7,7 +7,7 @@ def routine(train_loader, dev_loader, model, optimizer):
     for epoch in range(config.num_epochs):
         before_epoch = time.time()
         train_loss = train_epoch(train_loader, model, optimizer)
-        val_loss = evaluate(dev_loader, model)
+        # val_loss = evaluate(dev_loader, model)
         
         after_epoch = time.time()
         epoch_time = after_epoch - before_epoch
@@ -22,6 +22,7 @@ def train_epoch(train_loader, model, optimizer):
         optimizer.zero_grad()
         img_feats = img_feats.to(config.device)
         txt_feats = txt_feats.to(config.device)
+        bboxes = bboxes.to(config.device)
         
         model(img_feats, txt_feats)
 
@@ -31,6 +32,9 @@ def train_epoch(train_loader, model, optimizer):
 
         optimizer.step()
         epoch_loss += loss.item()
+        print("Batch: %d | Loss: %.6f" % (batch_id, loss.item()))
+
+    print("Avg Epoch Loss: %.6f" % (epoch_loss/num_batches))
 
     return epoch_loss/num_batches
 

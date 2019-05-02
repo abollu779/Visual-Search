@@ -55,7 +55,7 @@ if __name__ == '__main__':
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     dataset = RefDataset("train")
-    loader = DataLoader(dataset, batch_size=128, shuffle=True, num_workers=(8 if device == "cuda" else 0))
+    loader = DataLoader(dataset, batch_size=128, shuffle=False, num_workers=(8 if device == "cuda" else 0))
 
     for idx, (f,r,b) in enumerate(loader):
         print(f,r,b)

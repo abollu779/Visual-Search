@@ -68,6 +68,35 @@ class BBP(nn.Module):
         # bh = th^2 * ph
         return self.predictions
 
+    def localization_loss_diffIOU(self, pred_bboxes, gt_bboxes):
+        # pred_bboxes, gt_bboxes: batch_size x 4
+        eps = 1e-8
+
+        wa = pred_bboxes[:, 2]
+        ha = pred_bboxes[:, 3]
+        wb = gt_bboxes[:, 2]
+        hb = gt_bboxes[:, 3]
+        x1l = pred_bboxes[:, 0]
+        x1t = pred_bboxes[:, 1]
+        x1r = pred_bboxes[:, 0] + wa
+        x1b = pred_bboxes[:, 1] + ha
+        x2l = gt_bboxes[:, 0]
+        x2t = gt_bboxes[:, 1]
+        x2r = gt_bboxes[:, 0] + wb
+        x2b = gt_bboxes[:, 1] + hb
+
+        X1 = (x1t + x1b) * (x1l + x1r)
+        X2 = (x2t + x2b) * (x2l + x2r)
+
+        Ih = torch.min(x1t, x2t) + torch.min(x1b, x2b)
+        Iw = torch.min(x1l, x2l) + torch.min(x1r, x2r)
+        I = Ih * Iw
+        U = X1 + X2 - I
+        IoU = (I + eps)/(U + eps)
+        loss = -torch.log(IoU) # batch_size x 1
+
+        return loss.mean()
+
     def localization_loss(self, preds, ground_truths):
         #####################
         # COORDINATE LOSSES #
@@ -103,7 +132,8 @@ class BBP(nn.Module):
         y_t = torch.max(ty, gt_by1)
         y_b = torch.min(ty+th-1, gt_by2)
 
-        zeros = torch.zeros(batch_size)
+        device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        zeros = torch.zeros(batch_size).to(device)
         intersection = torch.max(zeros, x_r-x_l+1) * torch.max(zeros, y_b-y_t+1)
         union = (tw*th) + (gt_w * gt_h) - intersection
 
@@ -126,7 +156,7 @@ class BBP(nn.Module):
         # bounding_boxes: batch_size x 4
         # preds: batch_size x 5
 
-        lloss = self.localization_loss(preds[:,:-1], bounding_boxes)
+        lloss = self.localization_loss_diffIOU(preds[:,:-1], bounding_boxes)
         closs = self.conf_loss(preds, bounding_boxes)
 
         return lloss, closs
