@@ -17,10 +17,11 @@ class RefDataset(Dataset):
         print('Found {} referred objects in {} split.'.format(len(self.ref_ids),split))
 
     def __len__(self):
+        return 6
         return len(self.ref_ids)
 
-    def __getitem__(self,i):
-
+    def __getitem__(self,j):
+        i = [48,49,50,51,58,111][j]
         ref_id = self.ref_ids[i]
         ref = self.refer.loadRefs(ref_id)[0]
 
@@ -31,11 +32,12 @@ class RefDataset(Dataset):
 
         height = image['height']
         width = image['width']
-        bound_box = self.refer.getRefBox(ref_id)
+        bound_box = torch.Tensor(self.refer.getRefBox(ref_id))
         bound_box[0] /= width
         bound_box[1] /= height
         bound_box[2] /= width
         bound_box[3] /= height
+        #bound_box = bound_box.unsqueeze(dim=0)
 
         #whole_file_name = ref['file_name']
         #file_name = whole_file_name[:whole_file_name.rfind("_")]+".jpg"
@@ -45,7 +47,7 @@ class RefDataset(Dataset):
         text_id = sent['sent_id']
 
         text_idx = self.text_ids.index(text_id)
-        text_embed = self.text_embeds[text_idx,:,:,:]
+        text_embed = self.text_embeds[text_idx,:]
 
         return image_embed, text_embed, bound_box
         
@@ -55,7 +57,10 @@ if __name__ == '__main__':
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     dataset = RefDataset("train")
-    loader = DataLoader(dataset, batch_size=128, shuffle=True, num_workers=(8 if device == "cuda" else 0))
+    loader = DataLoader(dataset, batch_size=128, shuffle=False, num_workers=(8 if device == "cuda" else 0))
 
     for idx, (f,r,b) in enumerate(loader):
         print(f,r,b)
+        print(f.shape)
+        print(r.shape)
+        print(b.shape)

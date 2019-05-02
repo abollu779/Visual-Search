@@ -341,7 +341,7 @@ if __name__ == '__main__':
 	ref_ids = refer.getRefIds(split='train')
 	print('There are {} training referred objects.'.format(len(ref_ids)))
 
-	for ref_id in ref_ids:
+	for ref_id in [55,56,57]:#ref_ids:
 		ref = refer.loadRefs(ref_id)[0]
 		if len(ref['sentences']) < 2:
 			continue

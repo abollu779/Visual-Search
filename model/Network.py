@@ -34,10 +34,12 @@ class Network(nn.Module):
         self.attn = ImageTextAttention()
         self.bbp = BBP()
 
-        # TODO: Initialize following loss weight factors appropriately
-        self.lweight = None
-        self.cweight = None
-        self.aweight = None
+        # Loss weight factors from paper
+        # NOTE: Might need to review these weight factors, as we're missing
+        # loss from attribute prediction phase at the moment
+        self.lweight = 20.0
+        self.cweight = 5.0
+        self.aweight = 1.0
 
     def forward(self, img_feats, txt_feats):
 
@@ -46,8 +48,9 @@ class Network(nn.Module):
 
         agg_feats = self.attn(img_feats, txt_feats) # batch_size x 1024 x 1 x 1
         
-        agg_feats = agg_feats.permute(0, 3, 1, 2)   # batch_size x 1 x 1 x 1024
+        agg_feats = agg_feats.permute(0, 2, 3, 1)   # batch_size x 1 x 1 x 1024
         txt_feats = txt_feats.unsqueeze(1).unsqueeze(2) # batch_size x 1 x 1 x 2048
+
         preds = self.bbp(agg_feats, txt_feats) # batch_size x 5
 
         return preds
@@ -57,6 +60,7 @@ class Network(nn.Module):
         lloss, closs = self.bbp.loss(bounding_boxes)
         aloss = self.attn.loss(bounding_boxes)
 
-        loss = (self.lweight * lloss) + (self.cweight * closs) + (self.aweight * aloss)
+        # Ignore Confidence Loss for Now
+        loss = (self.lweight * lloss) + (self.aweight * aloss)
         return loss
 
