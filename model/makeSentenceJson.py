@@ -30,8 +30,13 @@ if __name__ == '__main__':
     dataset = RefDataset()
 
     d = dict()
+    text = ""
+    outfile = open('input_text.txt', 'w+')
     for s, sid in dataset:
-        d[str(sid)] = s
+        outfile.write(s+"\n")
+        # text += s+"\n"
 
-    with open('sentences.json', 'w+') as outfile:  
-        json.dump(d, outfile)
+        # d[str(sid)] = s
+
+    # with open('input_text.txt', 'w+') as outfile:  
+        # json.dump(text, outfile)
