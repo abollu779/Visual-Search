@@ -23,6 +23,7 @@ import torch.nn as nn
 ###########
 # MODULES #
 ###########
+from TextBiLSTM import TextBiLSTM
 from AttentionModule import ImageTextAttention
 # import FeaturePredictor
 from BoundingBoxPredictor import BBP
@@ -31,6 +32,7 @@ class Network(nn.Module):
     def __init__(self):
         super(Network, self).__init__()
 
+        self.bilstm = TextBiLSTM()
         self.attn = ImageTextAttention()
         self.bbp = BBP()
 
@@ -41,9 +43,12 @@ class Network(nn.Module):
         self.cweight = 5.0
         self.aweight = 1.0
 
-    def forward(self, img_feats, txt_feats):
+    def forward(self, img_feats, sent_feats):
 
         # img_feats: batch_size x 1024 x 13 x 13
+        # sent_feats: batch_size x seq_len x 3072 (NOT A TENSOR)
+
+        txt_feats = self.bilstm(sent_feats)
         # txt_feats: batch_size x 2048
 
         agg_feats = self.attn(img_feats, txt_feats) # batch_size x 1024 x 1 x 1
@@ -63,4 +68,14 @@ class Network(nn.Module):
         # Ignore Confidence Loss for Now
         loss = (self.lweight * lloss) + (self.aweight * aloss)
         return loss
+
+def init_weights(m):
+    if (type(m) == torch.nn.Linear) or (type(m) == torch.nn.Conv2d):
+        torch.nn.init.xavier_uniform_(m.weight.data)
+    elif type(m) == torch.nn.LSTM:
+        for name, param in m.named_parameters():
+            if 'bias' in name:
+                torch.nn.init.constant_(param, 0.0)
+            if 'weight' in name:
+                torch.nn.init.xavier_uniform_(param)
 

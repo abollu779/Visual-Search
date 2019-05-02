@@ -7,7 +7,7 @@ import config
 import routine
 
 sys.path.append(os.path.realpath('../model'))
-from Network import Network
+from Network import Network, init_weights
 from DataLoader import RefDataset
 
 def run():
@@ -26,6 +26,7 @@ def run():
     print("Initializing Model...")
     # Network
     model = Network()
+    model.apply(init_weights)
     model = model.to(config.device)
     optimizer = torch.optim.Adam(model.parameters(), lr=config.learning_rate, weight_decay=config.weight_decay)
 
