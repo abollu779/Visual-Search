@@ -48,6 +48,8 @@ class Network(nn.Module):
         # img_feats: batch_size x 1024 x 13 x 13
         # sent_feats: batch_size x seq_len x 3072 (NOT A TENSOR)
 
+        sent_feats = [torch.rand(5,3072),torch.rand(3,3072),torch.rand(2,3072), \
+                      torch.rand(4,3072),torch.rand(2,3072),torch.rand(5,3072)]
         txt_feats = self.bilstm(sent_feats)
         # txt_feats: batch_size x 2048
 
