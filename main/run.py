@@ -28,7 +28,9 @@ def run():
     model = Network()
     model.apply(init_weights)
     model = model.to(config.device)
-    optimizer = torch.optim.Adam(model.parameters(), lr=config.learning_rate, weight_decay=config.weight_decay)
+
+    # optimizer = torch.optim.Adam(model.parameters(), lr=config.learning_rate, weight_decay=config.weight_decay)
+    optimizer = torch.optim.SGD(model.parameters(), lr=config.learning_rate, momentum=config.momentum)
 
     if config.train:
         print("=========Training Model=========")
