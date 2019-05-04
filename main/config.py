@@ -5,7 +5,7 @@ import torch
 #############
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 train = True
-batch_size = 3
+batch_size = 64
 num_workers = 8 if (device=='cuda') else 0
 
 #######################
@@ -13,6 +13,6 @@ num_workers = 8 if (device=='cuda') else 0
 #######################
 
 learning_rate = 1e-3
-# weight_decay = 1e-6
+weight_decay = 1e-4
 momentum=0.9
 num_epochs = 3

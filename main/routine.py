@@ -1,4 +1,5 @@
 import torch
+from torch.nn.utils import rnn
 import time
 
 import config
@@ -11,19 +12,21 @@ def routine(train_loader, dev_loader, model, optimizer):
         
         after_epoch = time.time()
         epoch_time = after_epoch - before_epoch
+        print("Epoch: %d | Train Loss: %.6f | Time : %.2fs" % (epoch, train_loss, epoch_time))
     return
 
 def train_epoch(train_loader, model, optimizer):
     model.train()
     epoch_loss = 0
     num_batches = len(train_loader)
-    
     for batch_id, (img_feats, txt_feats, bboxes) in enumerate(train_loader):
+        b_batch = time.time()
+
         optimizer.zero_grad()
         img_feats = img_feats.to(config.device)
-        txt_feats = txt_feats.to(config.device)
+        txt_feats = rnn.pack_sequence(txt_feats).to(config.device)
         bboxes = bboxes.to(config.device)
-        
+
         model(img_feats, txt_feats)
 
         # Compute loss
@@ -32,9 +35,9 @@ def train_epoch(train_loader, model, optimizer):
 
         optimizer.step()
         epoch_loss += loss.item()
-        print("Batch: %d | Loss: %.6f" % (batch_id, loss.item()))
 
-    print("Avg Epoch Loss: %.6f" % (epoch_loss/num_batches))
+        a_batch = time.time()
+        print("Batch: %d | Loss: %.6f | Time : %.2fs" % (batch_id, loss.item(), a_batch-b_batch))
 
     return epoch_loss/num_batches
 
@@ -45,7 +48,8 @@ def evaluate(dev_loader, model):
 
     for batch_id, (img_feats, txt_feats, bboxes) in enumerate(dev_loader):
         img_feats = img_feats.to(config.device)
-        txt_feats = txt_feats.to(config.device)
+        txt_feats = rnn.pack_sequence(txt_feats).to(config.device)
+        bboxes = bboxes.to(config.device)
         
         model(img_feats, txt_feats)
 
@@ -60,7 +64,7 @@ def predict(test_loader, model):
 
     for batch_id, (img_feats, txt_feats) in enumerate(test_loader):
         img_feats = img_feats.to(config.device)
-        txt_feats = txt_feats.to(config.device)
+        txt_feats = rnn.pack_sequence(txt_feats).to(config.device)
 
         preds = model(img_feats, txt_feats)
         

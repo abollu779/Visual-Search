@@ -14,8 +14,8 @@ class TextBiLSTM(nn.Module):
 
     def forward(self,x):
 
-        device = 'cuda' if torch.cuda.is_available() else 'cpu'
-        x = rnn.pack_sequence(x).to(device)
+        # device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        # x = rnn.pack_sequence(x).to(device)
 
         _,(h,c) = self.lstm(x,None)
  

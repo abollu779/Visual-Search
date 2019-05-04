@@ -43,22 +43,20 @@ class Network(nn.Module):
         self.cweight = 5.0
         self.aweight = 1.0
 
-    def forward(self, img_feats, sent_feats):
+    def forward(self, img_feats, text_feats):
 
         # img_feats: batch_size x 1024 x 13 x 13
-        # sent_feats: batch_size x seq_len x 3072 (NOT A TENSOR)
+        # text_feats: batch_size x seq_len x 3072 (PACKED TENSOR)
 
-        sent_feats = [torch.rand(5,3072),torch.rand(3,3072),torch.rand(2,3072), \
-                      torch.rand(4,3072),torch.rand(2,3072),torch.rand(5,3072)]
-        txt_feats = self.bilstm(sent_feats)
-        # txt_feats: batch_size x 2048
+        sent_feats = self.bilstm(text_feats)
+        # sent_feats: batch_size x 2048
 
-        agg_feats = self.attn(img_feats, txt_feats) # batch_size x 1024 x 1 x 1
+        agg_feats = self.attn(img_feats, sent_feats) # batch_size x 1024 x 1 x 1
         
         agg_feats = agg_feats.permute(0, 2, 3, 1)   # batch_size x 1 x 1 x 1024
-        txt_feats = txt_feats.unsqueeze(1).unsqueeze(2) # batch_size x 1 x 1 x 2048
+        sent_feats = sent_feats.unsqueeze(1).unsqueeze(2) # batch_size x 1 x 1 x 2048
 
-        preds = self.bbp(agg_feats, txt_feats) # batch_size x 5
+        preds = self.bbp(agg_feats, sent_feats) # batch_size x 5
 
         return preds
 
